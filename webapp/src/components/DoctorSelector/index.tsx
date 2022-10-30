@@ -12,7 +12,7 @@ const DoctorSelector: FC<{
 }> = ({ doctors, value, onChange, loading }) => {
   return (
     <Box>
-      <Heading as='h3' fontSize='x-large' color='orange.400' mb='30px'>
+      <Heading as='h3' fontSize='x-large' color='#00a699' mb='20px'>
         Doctors
       </Heading>
 
@@ -21,20 +21,19 @@ const DoctorSelector: FC<{
       {!loading && (!doctors || !doctors.length) && <Text>No doctors</Text>}
 
       {!loading && !!doctors?.length && (
-        <Box mb='50px'>
-          {!value && (
-            <Box backgroundColor={'orange.400'} p={'10px 8px'}>
-              Select
-            </Box>
-          )}
+        <Box>
+          <Text mb='10px'>Select doctor</Text>
           {doctors.map((doc) => (
             <Box
               key={doc.id}
               onClick={() => onChange(doc)}
               backgroundColor={
-                value?.name === doc.name ? 'orange.400' : 'gray.200'
+                value?.name === doc.name ? '#00a699' : 'gray.200'
               }
+              color={value?.name === doc.name ? 'white' : 'gray.900'}
+              fontWeight='600'
               p={'10px 8px'}
+              mb='10px'
             >
               {doc.name}
             </Box>

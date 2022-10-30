@@ -28,7 +28,6 @@ const BookingForm: FC<{
   const {
     control,
     register,
-    setValue,
     handleSubmit,
     formState: { errors },
   } = useForm<FormData>({
@@ -42,75 +41,112 @@ const BookingForm: FC<{
   const onSubmitHandler = (data: FormData) => {
     const { firstName, lastName, description } = data;
     const appointmentInput: BookAppointmentInput = {
-      slot: selectedSlot,
+      slot: {
+        doctorId: selectedSlot.doctorId,
+        start: selectedSlot.start,
+        end: selectedSlot.end,
+      },
       patientName: `${firstName} ${lastName}`.trim(),
       description,
     };
     onSubmit(appointmentInput);
   };
 
-  // const prepareDate = (date: Date)=>{
-  //   return `${new Date(date).toISOString().split('T')[0]} at ${new Date(date)
-  //     .toISOString()
-  //     .split('T')[1]
-  //     .slice(0, 5)}`
-  // }
+  const prepareTime = (dateValue: Date) => {
+    const date = new Date(dateValue);
+    let hours = date.getHours().toString();
+    if (hours.length < 2) {
+      hours = `0${hours}`;
+    }
+    let minutes = date.getMinutes().toString();
+    if (minutes.length < 2) {
+      minutes = `0${minutes}`;
+    }
+    return `${hours}:${minutes}`;
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmitHandler)}>
-      <Heading as='h3' fontSize='x-large' color='orange.400' mb='30px'>
+      <Heading as='h3' fontSize='x-large' color='#00a699' mb='30px'>
         Appointment details:
       </Heading>
       <Box mb='30px'>
         <Text>
           Date:{' '}
-          <span>
+          <span style={{ textDecoration: 'underline' }}>
             {new Date(selectedSlot.start).toISOString().split('T')[0]}
           </span>
         </Text>
         <Text>
           Time:{' '}
-          <span>
-            {new Date(selectedSlot.start).getHours()}:
-            {new Date(selectedSlot.start).getMinutes()}-
-            {new Date(selectedSlot.end).getHours()}:
-            {new Date(selectedSlot.end).getMinutes()}
+          <span style={{ textDecoration: 'underline' }}>
+            {prepareTime(selectedSlot.start)}-{prepareTime(selectedSlot.end)}
           </span>
         </Text>
       </Box>
-      <FormControl bgColor='white'>
-        <FormLabel>First Name</FormLabel>
-        <Controller
-          name='firstName'
-          control={control}
-          render={({ field }) => <Input {...field} />}
-        />
-        {/*{errors.firstName && <FormErrorMessage>{errors.firstName}</FormErrorMessage>}*/}
 
-        <FormLabel>Last Name</FormLabel>
-        <Controller
-          name='lastName'
-          control={control}
-          render={({ field }) => <Input {...field} />}
-        />
+      <FormControl bgColor='white' isInvalid={!!Object.keys(errors).length}>
+        <Box mb='15px'>
+          <FormLabel>First Name</FormLabel>
+          <Controller
+            name='firstName'
+            control={control}
+            render={({ field }) => (
+              <Input
+                {...field}
+                {...register('firstName', {
+                  required: true,
+                  maxLength: 20,
+                  pattern: /^[A-Za-z ]+$/i,
+                })}
+              />
+            )}
+          />
+          {!!errors.firstName && (
+            <FormErrorMessage>Invalid first name</FormErrorMessage>
+          )}
+        </Box>
 
-        <FormLabel>Description</FormLabel>
-        <Controller
-          name='description'
-          control={control}
-          render={({ field }) => <Input {...field} />}
-        />
+        <Box mb='15px'>
+          <FormLabel>Last Name</FormLabel>
+          <Controller
+            name='lastName'
+            control={control}
+            render={({ field }) => (
+              <Input
+                {...field}
+                {...register('lastName', {
+                  pattern: /^[A-Za-z ]+$/i,
+                  maxLength: 20,
+                })}
+              />
+            )}
+          />
+          {!!errors.lastName && (
+            <FormErrorMessage>Invalid lastName name</FormErrorMessage>
+          )}
+        </Box>
 
-        <Button mt={4} colorScheme='orange' isLoading={loading} type='submit'>
+        <Box>
+          <FormLabel>Description</FormLabel>
+          <Controller
+            name='description'
+            control={control}
+            render={({ field }) => <Input {...field} />}
+          />
+        </Box>
+
+        <Button
+          mt={4}
+          bgColor='#00a699'
+          color='white'
+          isLoading={loading}
+          disabled={!!Object.keys(errors).length}
+          type='submit'
+        >
           Submit
         </Button>
       </FormControl>
-
-      {/*<input {...register('firstName', { required: true, maxLength: 20 })} />*/}
-      {/*<input {...register('lastName', { pattern: /^[A-Za-z]+$/i })} />*/}
-      {/*<input defaultValue='' {...register('description')} />*/}
-      {/*{errors.required && <span>Name is required</span>}*/}
-      {/*<input type='submit' />*/}
     </form>
   );
 };

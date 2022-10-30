@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 
 import {
+  useToast,
   Flex,
   Heading,
   Box,
@@ -8,7 +9,7 @@ import {
   Spinner,
   useMediaQuery,
 } from '@chakra-ui/react';
-import { addMinutes, addDays } from 'date-fns';
+import { addDays } from 'date-fns';
 
 import BookingForm from '@/components/BookingForm';
 import DoctorSelector from '@/components/DoctorSelector';
@@ -23,18 +24,6 @@ import {
   useSlotsQuery,
 } from '@/generated/core.graphql';
 import { SlotWithKey } from '@/types/domain';
-
-const startDate = new Date();
-const generateSlots = (): SlotWithKey[] => {
-  return [
-    {
-      key: startDate.toString(),
-      start: startDate,
-      end: addMinutes(startDate, 15),
-      doctorId: 1,
-    },
-  ];
-};
 
 const prepareSlotsList = (
   slotsArr: Slot[],
@@ -54,11 +43,12 @@ const prepareSlotsList = (
 };
 
 const Appointments = () => {
+  const toast = useToast();
   const [isMobile] = useMediaQuery('(min-width: 1024px)');
   const slotsFromDate = new Date('2022-10-31');
   const querySlotsArgs: QuerySlotsArgs = {
     from: slotsFromDate,
-    to: addDays(slotsFromDate, 7),
+    to: addDays(slotsFromDate, 30),
   };
 
   const {
@@ -79,25 +69,23 @@ const Appointments = () => {
     { loading: loadindAddAppointment },
   ] = useAppointmentMutation();
 
-  console.log('errorSlots', errorSlots);
-
   const [error, setError] = useState<string>();
   const [slots, setSlots] = useState<SlotWithKey[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor>();
-  const [isLoading] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState<SlotWithKey>();
+  const [selectedSlot, setSelectedSlot] = useState<SlotWithKey | null>();
 
   const minimumStartDate = slots?.[0]?.start;
   const maximumStartDate = minimumStartDate && addDays(minimumStartDate, 30);
 
-  // useEffect(() => {
-  //   if (errorSlots) {
-  //     setError(errorDoctors || errorSlots);
-  //   }
-  // }, [errorSlots, errorDoctors]);
+  useEffect(() => {
+    if (errorDoctors || errorSlots) {
+      setError(errorDoctors?.message || errorSlots?.message);
+    }
+  }, [errorDoctors, errorSlots]);
 
   useEffect(() => {
     if (selectedDoctor) {
+      setSelectedSlot(null);
       const preparedSlots = prepareSlotsList(
         slotsData?.slots || [],
         selectedDoctor.id
@@ -106,7 +94,7 @@ const Appointments = () => {
     } else {
       setSlots([]);
     }
-  }, [selectedDoctor]);
+  }, [selectedDoctor, slotsData]);
 
   const onSubmitBookingForm = useCallback(
     async (bookAppointmentInput: BookAppointmentInput) => {
@@ -117,9 +105,23 @@ const Appointments = () => {
           },
         });
 
-        console.log('addBookAppointmentRes', addBookAppointmentRes);
-
-        await refetchSlots();
+        if (addBookAppointmentRes.data?.bookAppointment) {
+          toast({
+            title: 'Appointment booked successfully!',
+            description: `Patient: ${
+              addBookAppointmentRes.data.bookAppointment.patientName
+            }. Doctor: ${
+              addBookAppointmentRes.data.bookAppointment.doctor.name
+            }. Date: ${new Date(
+              addBookAppointmentRes.data.bookAppointment.startTime
+            )}`,
+            status: 'success',
+            duration: 5000,
+            isClosable: true,
+          });
+          await refetchSlots();
+          setSelectedSlot(null);
+        }
       } catch (ex) {
         console.log(ex);
       }
@@ -129,15 +131,16 @@ const Appointments = () => {
 
   return (
     <Box>
-      <Heading color='orange.500' fontSize='4xl' mb='50px'>
+      <Heading color='#00a699' fontSize='4xl' mb='50px'>
         Appointments
       </Heading>
+      <hr />
       {error && (
         <Box>
-          <Text>{error}</Text>
+          <Text color='red'>Error: {error}</Text>
         </Box>
       )}
-      <Flex flexDirection={isMobile ? 'row' : 'column'}>
+      <Flex flexDirection={isMobile ? 'row' : 'column'} mt='60px'>
         <Box mr={isMobile ? '60px' : 0}>
           <DoctorSelector
             doctors={doctors?.doctors as Doctor[]}
@@ -147,7 +150,7 @@ const Appointments = () => {
           />
         </Box>
         <Box mr={isMobile ? '60px' : 0}>
-          <Heading as='h3' fontSize='x-large' color='orange.400' mb='30px'>
+          <Heading as='h3' fontSize='x-large' color='#00a699' mb='30px'>
             Time Slots
           </Heading>
           {loadingSlots && <Spinner />}
@@ -158,7 +161,7 @@ const Appointments = () => {
               availableSlots={slots}
               value={selectedSlot}
               onChange={setSelectedSlot}
-              loadingSlots={isLoading}
+              loadingSlots={loadingSlots}
             />
           )}
           {!!selectedDoctor && !loadingSlots && !slots?.length && (

@@ -132,7 +132,7 @@ export type AppointmentMutationVariables = Exact<{
 }>;
 
 
-export type AppointmentMutation = { __typename?: 'Mutation', bookAppointment: { __typename?: 'Appointment', id: number, startTime: any, doctor: { __typename?: 'Doctor', id: number } } };
+export type AppointmentMutation = { __typename?: 'Mutation', bookAppointment: { __typename?: 'Appointment', id: number, startTime: any, patientName: string, doctor: { __typename?: 'Doctor', id: number, name: string } } };
 
 export type AddItemMutationVariables = Exact<{
   item: AddItemInput;
@@ -165,8 +165,10 @@ export const AppointmentDocument = gql`
   bookAppointment(bookAppointmentInput: $bookAppointmentInput) {
     id
     startTime
+    patientName
     doctor {
       id
+      name
     }
   }
 }

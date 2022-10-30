@@ -15,7 +15,7 @@ const theme = extendTheme({
         // fontSize: ,
       },
       a: {
-        color: 'orange.500',
+        color: '#00a699',
         textDecoration: 'underline'
       },
     },
