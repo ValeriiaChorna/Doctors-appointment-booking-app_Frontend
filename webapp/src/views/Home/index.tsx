@@ -3,8 +3,8 @@ import Link from 'next/link';
 
 const Home = () => {
   return (
-    <Box>
-      <Heading>Booker App</Heading>
+    <Box fontSize='3xl' align='center' mt='150px'>
+      <Heading color='orange.500' fontSize='6xl' mb='50px'>Booker App</Heading>
       <Link href='/items'>Items</Link>
       <br />
       <Link href='/appointments'>Appointments</Link>

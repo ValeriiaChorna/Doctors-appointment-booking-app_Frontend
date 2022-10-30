@@ -1,0 +1,9 @@
+mutation appointment($bookAppointmentInput: BookAppointmentInput!) {
+  bookAppointment(bookAppointmentInput: $bookAppointmentInput) {
+    id
+    startTime
+    doctor {
+      id
+    }
+  }
+}
