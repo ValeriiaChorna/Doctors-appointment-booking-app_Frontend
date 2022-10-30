@@ -18,29 +18,12 @@ import {
   BookAppointmentInput,
   Doctor,
   QuerySlotsArgs,
-  Slot,
   useAppointmentMutation,
   useDoctorsQuery,
   useSlotsQuery,
 } from '@/generated/core.graphql';
+import prepareSelectedDoctorSlotsList from '@/helpers/prepareSelectedDoctorSlotsList';
 import { SlotWithKey } from '@/types/domain';
-
-const prepareSlotsList = (
-  slotsArr: Slot[],
-  selectedDoctorId: number | null
-) => {
-  let res = slotsArr.map((slot: Slot) => ({
-    key: slot.start.toString(),
-    doctorId: slot.doctorId,
-    start: new Date(slot.start),
-    end: new Date(slot.end),
-  }));
-  if (selectedDoctorId) {
-    res = res.filter((slot) => slot.doctorId === selectedDoctorId);
-  }
-
-  return res;
-};
 
 const Appointments = () => {
   const toast = useToast();
@@ -66,7 +49,7 @@ const Appointments = () => {
   });
   const [
     addAppointment,
-    { loading: loadindAddAppointment },
+    { loading: loadingAddAppointment },
   ] = useAppointmentMutation();
 
   const [error, setError] = useState<string>();
@@ -78,15 +61,9 @@ const Appointments = () => {
   const maximumStartDate = minimumStartDate && addDays(minimumStartDate, 30);
 
   useEffect(() => {
-    if (errorDoctors || errorSlots) {
-      setError(errorDoctors?.message || errorSlots?.message);
-    }
-  }, [errorDoctors, errorSlots]);
-
-  useEffect(() => {
     if (selectedDoctor) {
       setSelectedSlot(null);
-      const preparedSlots = prepareSlotsList(
+      const preparedSlots = prepareSelectedDoctorSlotsList(
         slotsData?.slots || [],
         selectedDoctor.id
       );
@@ -95,6 +72,12 @@ const Appointments = () => {
       setSlots([]);
     }
   }, [selectedDoctor, slotsData]);
+
+  useEffect(() => {
+    if (errorDoctors || errorSlots) {
+      setError(errorDoctors?.message || errorSlots?.message);
+    }
+  }, [errorDoctors, errorSlots]);
 
   const onSubmitBookingForm = useCallback(
     async (bookAppointmentInput: BookAppointmentInput) => {
@@ -106,15 +89,16 @@ const Appointments = () => {
         });
 
         if (addBookAppointmentRes.data?.bookAppointment) {
+          const appointmentInfo = `Patient: ${
+            addBookAppointmentRes.data.bookAppointment.patientName
+          }. Doctor: ${
+            addBookAppointmentRes.data.bookAppointment.doctor.name
+          }. Date: ${new Date(
+            addBookAppointmentRes.data.bookAppointment.startTime
+          )}`;
           toast({
             title: 'Appointment booked successfully!',
-            description: `Patient: ${
-              addBookAppointmentRes.data.bookAppointment.patientName
-            }. Doctor: ${
-              addBookAppointmentRes.data.bookAppointment.doctor.name
-            }. Date: ${new Date(
-              addBookAppointmentRes.data.bookAppointment.startTime
-            )}`,
+            description: appointmentInfo,
             status: 'success',
             duration: 5000,
             isClosable: true,
@@ -126,7 +110,7 @@ const Appointments = () => {
         console.log(ex);
       }
     },
-    [addAppointment]
+    [addAppointment, refetchSlots]
   );
 
   return (
@@ -173,7 +157,7 @@ const Appointments = () => {
             <BookingForm
               selectedSlot={selectedSlot}
               onSubmit={onSubmitBookingForm}
-              loading={loadindAddAppointment}
+              loading={loadingAddAppointment}
             />
           </Box>
         )}

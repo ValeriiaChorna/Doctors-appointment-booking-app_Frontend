@@ -13,6 +13,7 @@ import {
 import { Controller, useForm } from 'react-hook-form';
 
 import { BookAppointmentInput, Slot } from '@/generated/core.graphql';
+import getTimeStringFromDate from '@/helpers/getTimeFromDate';
 
 type FormData = {
   firstName: string;
@@ -52,19 +53,6 @@ const BookingForm: FC<{
     onSubmit(appointmentInput);
   };
 
-  const prepareTime = (dateValue: Date) => {
-    const date = new Date(dateValue);
-    let hours = date.getHours().toString();
-    if (hours.length < 2) {
-      hours = `0${hours}`;
-    }
-    let minutes = date.getMinutes().toString();
-    if (minutes.length < 2) {
-      minutes = `0${minutes}`;
-    }
-    return `${hours}:${minutes}`;
-  };
-
   return (
     <form onSubmit={handleSubmit(onSubmitHandler)}>
       <Heading as='h3' fontSize='x-large' color='#00a699' mb='30px'>
@@ -80,7 +68,8 @@ const BookingForm: FC<{
         <Text>
           Time:{' '}
           <span style={{ textDecoration: 'underline' }}>
-            {prepareTime(selectedSlot.start)}-{prepareTime(selectedSlot.end)}
+            {getTimeStringFromDate(selectedSlot.start)}-
+            {getTimeStringFromDate(selectedSlot.end)}
           </span>
         </Text>
       </Box>
