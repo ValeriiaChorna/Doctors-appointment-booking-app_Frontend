@@ -6,7 +6,7 @@ import { isSameDay, format, isEqual } from 'date-fns';
 import moment from 'moment';
 import { DayPickerSingleDateController } from 'react-dates';
 
-import { Slot } from '@/types/domain';
+import { SlotWithKey } from '@/types/domain';
 
 import { Container } from './styled';
 
@@ -16,13 +16,13 @@ import 'react-dates/lib/css/_datepicker.css';
 type Props = {
   minimumStartDate: Date;
   maximumStartDate: Date;
-  availableSlots: Slot[];
-  value?: Slot;
-  onChange: (slot: Slot) => void;
+  availableSlots: SlotWithKey[];
+  value?: SlotWithKey | null;
+  onChange: (slot: SlotWithKey) => void;
   styleProps?: FlexProps;
-  slotLoading?: Slot;
+  slotLoading?: SlotWithKey;
   loadingSlots: boolean;
-}
+};
 
 const SlotSelector: FC<Props> = ({
   minimumStartDate,
@@ -35,12 +35,15 @@ const SlotSelector: FC<Props> = ({
   ...props
 }) => {
   const [date, setDate] = useState(
-    availableSlots?.[0]?.start || minimumStartDate,
+    availableSlots?.[0]?.start || minimumStartDate
   );
 
-  const onSlotSelected = useCallback((slot: Slot) => {
-    onChange(slot);
-  }, [onChange]);
+  const onSlotSelected = useCallback(
+    (slot: SlotWithKey) => {
+      onChange(slot);
+    },
+    [onChange]
+  );
 
   const availableSlotsOnDate = useMemo(() => {
     return availableSlots.filter((x) => isSameDay(x.start, date));
